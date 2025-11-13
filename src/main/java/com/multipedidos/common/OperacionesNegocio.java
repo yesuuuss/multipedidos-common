@@ -1,6 +1,7 @@
 package com.multipedidos.common;
 
 import java.util.Random;
+import java.util.List;
 
 /**
  * Librería de operaciones de negocio compartidas entre microservicios 
@@ -9,6 +10,7 @@ public class OperacionesNegocio {
 
     private static final double IVA_PORCENTAJE = 0.12; 
 
+  
     public static double calcularTotalConIVA(double subtotal) {
         if (subtotal < 0) {
             throw new IllegalArgumentException("El subtotal no puede ser negativo");
@@ -44,5 +46,45 @@ public class OperacionesNegocio {
     public static double calcularTotalConDescuento(double subtotal, double porcentajeDescuento) {
         double totalConIVA = calcularTotalConIVA(subtotal);
         return aplicarDescuento(totalConIVA, porcentajeDescuento);
+    }
+
+    
+    /**
+     * Procesa un pedido validando el cliente en Componente A integración circular
+     */
+    public static boolean procesarPedidoConValidacion(Long clienteId, List<Producto> productos) {
+       
+        boolean clienteValido = HttpClientUtil.validarClienteEnSistemaA(clienteId);
+        
+        if (!clienteValido) {
+            System.out.println(" Cliente con ID " + clienteId + " no existe en el sistema");
+            return false;
+        }
+        
+   
+        double subtotal = CalculadoraTotal.calcularTotal(productos);
+        double totalConIVA = calcularTotalConIVA(subtotal);
+        
+     
+        String codigoPedido = GeneradorCodigos.generarCodigoUnico("PED");
+        
+        System.out.println(" Pedido procesado - Código: " + codigoPedido + 
+                         ", Cliente ID: " + clienteId + 
+                         ", Total: $" + totalConIVA);
+        return true;
+    }
+    
+    /**
+     * Método específico para calcular total de lista de productos nuevo requerimiento
+     */
+    public static double calcularTotal(List<Producto> productos) {
+        return CalculadoraTotal.calcularTotal(productos);
+    }
+    
+    /**
+     * Método específico para generar código único nuevo requerimiento
+     */
+    public static String generarCodigoUnico(String tipoEntidad) {
+        return GeneradorCodigos.generarCodigoUnico(tipoEntidad);
     }
 }
